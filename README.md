@@ -7,13 +7,34 @@ The aim of this project is isolating the audacity Noise Reduction plugin so that
 
 Audacity effects are implemented by extending the class Effect which provides several methods to be extended. Audacity uses the common interface to polimorphycally invoke and configure plugins through their base clase.
 
-### Effect class
+In this case the Effect class does not implement the logic of the Noise Reduction Algorithm which is implemented within the Worker inner class. The Effect is a container for the effect which orchestrates the creation and interactions between inner classes (Settings, Statistics, Dialog and Worker).
+
+### Dialog class
 
 Normally plugins also implement a Dialog class which is used to implement the effect pop up window through which the user introduces parameters and executes actions for these specific effect.
 
 ### Statistics class
 
-### Worker class
+An instance of Statistics class is created when profiling the noise. Apart from several generic parameters like window size or rate, there are two (three depending on compilation options) Float Vectors containing statistical data on profiled sound window.
+
+### Settings class
+
+Settings class containing parameters used by the algorithm and read from the plugin pop up window:
+
+ - bool mDoProfile = indicate if we are profling noise or reducing noise
+ - double     mNewSensitivity;   // - log10 of a probability... yeah.
+ - double     mFreqSmoothingBands; // really an integer
+ - double     mNoiseGain;         // in dB, positive
+ - double     mAttackTime;        // in secs
+ - double     mReleaseTime;       // in secs
+ - double     mOldSensitivity;    // in dB, plus or minus
+ - int        mNoiseReductionChoice;
+ - int        mWindowTypes;
+ - int        mWindowSizeChoice;
+ - int        mStepsPerWindowChoice;
+ - int        mMethod;
+
+### Worker class (The Mother of the Lamb)
 
 ## Behaviour
 
