@@ -374,11 +374,10 @@ Final_action<F> finally (F f)
    return Final_action<F>(f);
 }
 
-
-#define wxMin (a,b) (a) < (b) ? (a) : (b)
-#define wxMax (a,b) (a) > (b) ? (a) : (b)
-
 #include <algorithm>
+
+#define wxMin (a,b) std::min(a,b)
+#define wxMax (a,b) std::max(a,b)
 
 /*
  * Set a variable temporarily in a scope
