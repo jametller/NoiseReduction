@@ -44,6 +44,10 @@
 #include <math.h>
 #include <cassert>
 
+#include "Types.h"
+#include "WaveTrack.h"
+#include "TrackFactory.h"
+
 #if defined(__WXMSW__) && !defined(__CYGWIN__)
 #include <float.h>
 #define finite(x) _finite(x)

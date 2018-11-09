@@ -14,6 +14,7 @@
 #define __AUDACITY_EFFECT_NOISE_REDUCTION__
 
 #include "./MemoryX.h"
+#include "Types.h"
 
 #define NOISEREDUCTION_PLUGIN_SYMBOL ComponentInterfaceSymbol{ XO("Noise Reduction") }
 
