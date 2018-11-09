@@ -69,3 +69,7 @@ The effect has several dependencies. Some of them are an independent file which 
 - Make a fake WaveTrack class (PENDING)
 - Make a main method creating noise reduction PENDING
 - Discover format of wav files and how they are translated to float arrays PENDING
+- Delete Dialog class DONE
+- Transform wx chars to chars DONE
+- Transform wxAsserts to normal asserts DONE
+- Transform calls to MessageBox to std::cout DONE
