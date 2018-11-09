@@ -30,11 +30,9 @@ public:
 
    class Settings;
    class Statistics;
-   class Dialog;
 
 private:
    class Worker;
-   friend class Dialog;
 
    std::unique_ptr<Settings> mSettings;
    std::unique_ptr<Statistics> mStatistics;

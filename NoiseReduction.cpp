@@ -38,9 +38,11 @@
 
 #include "NoiseReduction.h"
 
+#include <iostream>
 #include <algorithm>
 #include <vector>
 #include <math.h>
+#include <cassert>
 
 #if defined(__WXMSW__) && !defined(__CYGWIN__)
 #include <float.h>
@@ -79,12 +81,12 @@ enum DiscriminationMethod {
 };
 
 const struct DiscriminationMethodInfo {
-   const wxChar *name;
+   const char *name;
 } discriminationMethodInfo[DM_N_METHODS] = {
    // Experimental only, don't need translations
-      { wxT("Median") },
-      { wxT("Second greatest") },
-      { wxT("Old") },
+      { "Median" },
+      { "Second greatest" },
+      { "Old" },
 };
 
 // magic number used only in the old statistics
@@ -105,7 +107,7 @@ enum WindowTypes {
 };
 
 const struct WindowTypesInfo {
-   const wxChar *name;
+   const char *name;
    unsigned minSteps;
    double inCoefficients[3];
    double outCoefficients[3];
@@ -116,13 +118,13 @@ const struct WindowTypesInfo {
    // plus one half the product of the first cosine coefficients.
 
    // Experimental only, don't need translations
-   { wxT("none, Hann (2.0.6 behavior)"),    2, { 1, 0, 0 },            { 0.5, -0.5, 0 }, 0.5 },
-   { wxT("Hann, none"),                     2, { 0.5, -0.5, 0 },       { 1, 0, 0 },      0.5 },
-   { wxT("Hann, Hann (default)"),           4, { 0.5, -0.5, 0 },       { 0.5, -0.5, 0 }, 0.375 },
-   { wxT("Blackman, Hann"),                 4, { 0.42, -0.5, 0.08 },   { 0.5, -0.5, 0 }, 0.335 },
-   { wxT("Hamming, none"),                  2, { 0.54, -0.46, 0.0 },   { 1, 0, 0 },      0.54 },
-   { wxT("Hamming, Hann"),                  4, { 0.54, -0.46, 0.0 },   { 0.5, -0.5, 0 }, 0.385 },
-   { wxT("Hamming, Reciprocal Hamming"),    2, { 0.54, -0.46, 0.0 },   { 1, 0, 0 }, 1.0 }, // output window is special
+   { "none, Hann (2.0.6 behavior)",    2, { 1, 0, 0 },            { 0.5, -0.5, 0 }, 0.5 },
+   { "Hann, none",                     2, { 0.5, -0.5, 0 },       { 1, 0, 0 },      0.5 },
+   { "Hann, Hann (default)",           4, { 0.5, -0.5, 0 },       { 0.5, -0.5, 0 }, 0.375 },
+   { "Blackman, Hann",                 4, { 0.42, -0.5, 0.08 },   { 0.5, -0.5, 0 }, 0.335 },
+   { "Hamming, none",                  2, { 0.54, -0.46, 0.0 },   { 1, 0, 0 },      0.54 },
+   { "Hamming, Hann",                  4, { 0.54, -0.46, 0.0 },   { 0.5, -0.5, 0 }, 0.385 },
+   { "Hamming, Reciprocal Hamming",    2, { 0.54, -0.46, 0.0 },   { 1, 0, 0 }, 1.0 }, // output window is special
 };
 
 enum {
@@ -333,77 +335,6 @@ private:
    std::vector<std::unique_ptr<Record>> mQueue;
 };
 
-/****************************************************************//**
-
-\class EffectNoiseReduction::Dialog
-\brief Dialog used with EffectNoiseReduction
-
-**//*****************************************************************/
-
-//----------------------------------------------------------------------------
-// EffectNoiseReduction::Dialog
-//----------------------------------------------------------------------------
-
-class EffectNoiseReduction::Dialog final : public EffectDialog
-{
-public:
-   // constructors and destructors
-   Dialog
-      (EffectNoiseReduction *effect,
-       Settings *settings,
-       wxWindow *parent, bool bHasProfile,
-       bool bAllowTwiddleSettings);
-
-   void PopulateOrExchange(ShuttleGui & S) override;
-   bool TransferDataToWindow() override;
-   bool TransferDataFromWindow() override;
-
-   const Settings &GetTempSettings() const
-   { return mTempSettings; }
-
-private:
-   void DisableControlsIfIsolating();
-
-#ifdef ADVANCED_SETTINGS
-   void EnableDisableSensitivityControls();
-#endif
-
-   // handlers
-   void OnGetProfile( wxCommandEvent &event );
-   void OnNoiseReductionChoice( wxCommandEvent &event );
-#ifdef ADVANCED_SETTINGS
-   void OnMethodChoice(wxCommandEvent &);
-#endif
-   void OnPreview(wxCommandEvent &event) override;
-   void OnReduceNoise( wxCommandEvent &event );
-   void OnCancel( wxCommandEvent &event );
-   void OnHelp( wxCommandEvent &event );
-
-   void OnText(wxCommandEvent &event);
-   void OnSlider(wxCommandEvent &event);
-
-   // data members
-
-   EffectNoiseReduction *m_pEffect;
-   EffectNoiseReduction::Settings *m_pSettings;
-   EffectNoiseReduction::Settings mTempSettings;
-
-   bool mbHasProfile;
-   bool mbAllowTwiddleSettings;
-
-
-   wxRadioButton *mKeepSignal;
-#ifdef ISOLATE_CHOICE
-   wxRadioButton *mKeepNoise;
-#endif
-#ifdef RESIDUE_CHOICE
-   wxRadioButton *mResidue;
-#endif
-
-private:
-    DECLARE_EVENT_TABLE()
-};
-
 EffectNoiseReduction::EffectNoiseReduction()
 : mSettings(std::make_unique<EffectNoiseReduction::Settings>())
 {
@@ -444,12 +375,12 @@ bool EffectNoiseReduction::Process()
    }
    else if (mStatistics->mWindowSize != mSettings->WindowSize()) {
       // possible only with advanced settings
-      ::Effect::MessageBox(_("You must specify the same window size for steps 1 and 2."));
+     std::cout << "You must specify the same window size for steps 1 and 2.")) << std::endl;
       return false;
    }
    else if (mStatistics->mWindowTypes != mSettings->mWindowTypes) {
       // A warning only
-      ::Effect::MessageBox(_("Warning: window types are not the same as for profiling."));
+     std::cout << "Warning: window types are not the same as for profiling.")) << std::endl;
    }
 
    Worker worker(*mSettings, mStatistics->mRate
@@ -481,9 +412,9 @@ bool EffectNoiseReduction::Worker::Process
    for ( auto track : tracks.Selected< WaveTrack >() ) {
       if (track->GetRate() != mSampleRate) {
          if (mDoProfile)
-            effect.Effect::MessageBox(_("All noise profile data must have the same sample rate."));
+	   std::cout << "All noise profile data must have the same sample rate." << std::endl;
          else
-            effect.Effect::MessageBox(_("The sample rate of the noise profile must match that of the sound to be processed."));
+	   std::cout << "The sample rate of the noise profile must match that of the sound to be processed." << std::endl;
          return false;
       }
 
@@ -506,7 +437,7 @@ bool EffectNoiseReduction::Worker::Process
 
    if (mDoProfile) {
       if (statistics.mTotalWindows == 0) {
-         effect.Effect::MessageBox(_("Selected noise profile is too short."));
+	std::cout << "Selected noise profile is too short." << std::endl;
          return false;
       }
    }
@@ -607,7 +538,7 @@ EffectNoiseReduction::Worker::Worker
       : 1 + mStepsPerWindow;
 
    mCenter = mNWindowsToExamine / 2;
-   wxASSERT(mCenter >= 1); // release depends on this assumption
+   assert(mCenter >= 1); // release depends on this assumption
 
    if (mDoProfile)
 #ifdef OLD_METHOD_AVAILABLE
@@ -935,7 +866,7 @@ bool EffectNoiseReduction::Worker::Classify(const Statistics &statistics, int ba
          return third <= mNewSensitivity * statistics.mMeans[band];
       }
       else {
-         wxASSERT(false);
+         assert(false);
          return true;
       }
    secondGreatest:
@@ -955,7 +886,7 @@ bool EffectNoiseReduction::Worker::Classify(const Statistics &statistics, int ba
          return second <= mNewSensitivity * statistics.mMeans[band];
       }
    default:
-      wxASSERT(false);
+      assert(false);
       return true;
    }
 }
@@ -1167,558 +1098,5 @@ bool EffectNoiseReduction::Worker::ProcessOne
    }
 
    return bLoopSuccess;
-}
-
-//----------------------------------------------------------------------------
-// EffectNoiseReduction::Dialog
-//----------------------------------------------------------------------------
-
-enum {
-   ID_BUTTON_GETPROFILE = 10001,
-   ID_RADIOBUTTON_KEEPSIGNAL,
-#ifdef ISOLATE_CHOICE
-   ID_RADIOBUTTON_KEEPNOISE,
-#endif
-#ifdef RESIDUE_CHOICE
-   ID_RADIOBUTTON_RESIDUE,
-#endif
-
-#ifdef ADVANCED_SETTINGS
-   ID_CHOICE_METHOD,
-#endif
-
-   // Slider/text pairs
-   ID_GAIN_SLIDER,
-   ID_GAIN_TEXT,
-
-   ID_NEW_SENSITIVITY_SLIDER,
-   ID_NEW_SENSITIVITY_TEXT,
-
-#ifdef ATTACK_AND_RELEASE
-   ID_ATTACK_TIME_SLIDER,
-   ID_ATTACK_TIME_TEXT,
-
-   ID_RELEASE_TIME_SLIDER,
-   ID_RELEASE_TIME_TEXT,
-#endif
-
-   ID_FREQ_SLIDER,
-   ID_FREQ_TEXT,
-
-   END_OF_BASIC_SLIDERS,
-
-#ifdef ADVANCED_SETTINGS
-   ID_OLD_SENSITIVITY_SLIDER = END_OF_BASIC_SLIDERS,
-   ID_OLD_SENSITIVITY_TEXT,
-
-   END_OF_ADVANCED_SLIDERS,
-   END_OF_SLIDERS = END_OF_ADVANCED_SLIDERS,
-#else
-   END_OF_SLIDERS = END_OF_BASIC_SLIDERS,
-#endif
-
-   FIRST_SLIDER = ID_GAIN_SLIDER,
-};
-
-namespace {
-
-struct ControlInfo {
-   typedef double (EffectNoiseReduction::Settings::*MemberPointer);
-
-   double Value(long sliderSetting) const
-   {
-      return
-         valueMin +
-         (double(sliderSetting) / sliderMax) * (valueMax - valueMin);
-   }
-
-   long SliderSetting(double value) const
-   {
-      return TrapLong(
-         0.5 + sliderMax * (value - valueMin) / (valueMax - valueMin),
-         0, sliderMax);
-   }
-
-   wxString Text(double value) const
-   {
-      if (formatAsInt)
-         return wxString::Format(format, (int)(value));
-      else
-         return wxString::Format(format, value);
-   }
-
-   void CreateControls(int id, ShuttleGui &S) const
-   {
-      FloatingPointValidator<double> vld2(2);// precision.
-      if (formatAsInt)
-         vld2.SetPrecision( 0 );
-      vld2.SetRange( valueMin, valueMax );
-      wxTextCtrl *const text =
-         S.Id(id + 1).AddTextBox(textBoxCaption(), wxT(""), 0);
-      S.SetStyle(wxSL_HORIZONTAL);
-      text->SetValidator(vld2);
-
-      wxSlider *const slider =
-         S.Id(id).AddSlider( {}, 0, sliderMax);
-      slider->SetName(sliderName());
-      slider->SetRange(0, sliderMax);
-      slider->SetSizeHints(150, -1);
-   }
-
-   MemberPointer field;
-   double valueMin;
-   double valueMax;
-   long sliderMax;
-   // (valueMin - valueMax) / sliderMax is the value increment of the slider
-   const wxChar* format;
-   bool formatAsInt;
-   const wxString textBoxCaption_;  wxString textBoxCaption() const { return wxGetTranslation(textBoxCaption_); }
-   const wxString sliderName_;  wxString sliderName() const { return wxGetTranslation(sliderName_); }
-
-   ControlInfo(MemberPointer f, double vMin, double vMax, long sMax, const wxChar* fmt, bool fAsInt,
-      const wxString &caption, const wxString &name)
-      : field(f), valueMin(vMin), valueMax(vMax), sliderMax(sMax), format(fmt), formatAsInt(fAsInt)
-      , textBoxCaption_(caption), sliderName_(name)
-   {
-   }
-};
-
-const ControlInfo *controlInfo() {
-   static const ControlInfo table[] = {
-         ControlInfo(&EffectNoiseReduction::Settings::mNoiseGain,
-         0.0, 48.0, 48, wxT("%d"), true,
-         XO("&Noise reduction (dB):"), XO("Noise reduction")),
-         ControlInfo(&EffectNoiseReduction::Settings::mNewSensitivity,
-         0.0, 24.0, 48, wxT("%.2f"), false,
-         XO("&Sensitivity:"), XO("Sensitivity")),
-#ifdef ATTACK_AND_RELEASE
-         ControlInfo(&EffectNoiseReduction::Settings::mAttackTime,
-         0, 1.0, 100, wxT("%.2f"), false,
-         XO("Attac&k time (secs):"), XO("Attack time")),
-         ControlInfo(&EffectNoiseReduction::Settings::mReleaseTime,
-         0, 1.0, 100, wxT("%.2f"), false,
-         XO("R&elease time (secs):"), XO("Release time")),
-#endif
-         ControlInfo(&EffectNoiseReduction::Settings::mFreqSmoothingBands,
-         0, 12, 12, wxT("%d"), true,
-         XO("&Frequency smoothing (bands):"), XO("Frequency smoothing")),
-
-#ifdef ADVANCED_SETTINGS
-         ControlInfo(&EffectNoiseReduction::Settings::mOldSensitivity,
-         -20.0, 20.0, 4000, wxT("%.2f"), false,
-         XO("Sensiti&vity (dB):"), XO("Old Sensitivity")),
-         // add here
-#endif
-   };
-
-return table;
-}
-
-} // namespace
-
-
-BEGIN_EVENT_TABLE(EffectNoiseReduction::Dialog, wxDialogWrapper)
-   EVT_BUTTON(wxID_OK, EffectNoiseReduction::Dialog::OnReduceNoise)
-   EVT_BUTTON(wxID_CANCEL, EffectNoiseReduction::Dialog::OnCancel)
-   EVT_BUTTON(ID_EFFECT_PREVIEW, EffectNoiseReduction::Dialog::OnPreview)
-   EVT_BUTTON(ID_BUTTON_GETPROFILE, EffectNoiseReduction::Dialog::OnGetProfile)
-   EVT_BUTTON(wxID_HELP, EffectNoiseReduction::Dialog::OnHelp)
-
-   EVT_RADIOBUTTON(ID_RADIOBUTTON_KEEPSIGNAL, EffectNoiseReduction::Dialog::OnNoiseReductionChoice)
-#ifdef ISOLATE_CHOICE
-   EVT_RADIOBUTTON(ID_RADIOBUTTON_KEEPNOISE, EffectNoiseReduction::Dialog::OnNoiseReductionChoice)
-#endif
-#ifdef RESIDUE_CHOICE
-   EVT_RADIOBUTTON(ID_RADIOBUTTON_RESIDUE, EffectNoiseReduction::Dialog::OnNoiseReductionChoice)
-#endif
-
-#ifdef ADVANCED_SETTINGS
-   EVT_CHOICE(ID_CHOICE_METHOD, EffectNoiseReduction::Dialog::OnMethodChoice)
-#endif
-
-   EVT_SLIDER(ID_GAIN_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_GAIN_TEXT, EffectNoiseReduction::Dialog::OnText)
-
-   EVT_SLIDER(ID_NEW_SENSITIVITY_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_NEW_SENSITIVITY_TEXT, EffectNoiseReduction::Dialog::OnText)
-
-   EVT_SLIDER(ID_FREQ_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_FREQ_TEXT, EffectNoiseReduction::Dialog::OnText)
-
-#ifdef ATTACK_AND_RELEASE
-   EVT_SLIDER(ID_ATTACK_TIME_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_ATTACK_TIME_TEXT, EffectNoiseReduction::Dialog::OnText)
-
-   EVT_SLIDER(ID_RELEASE_TIME_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_RELEASE_TIME_TEXT, EffectNoiseReduction::Dialog::OnText)
-#endif
-
-
-#ifdef ADVANCED_SETTINGS
-   EVT_SLIDER(ID_OLD_SENSITIVITY_SLIDER, EffectNoiseReduction::Dialog::OnSlider)
-   EVT_TEXT(ID_OLD_SENSITIVITY_TEXT, EffectNoiseReduction::Dialog::OnText)
-#endif
-END_EVENT_TABLE()
-
-EffectNoiseReduction::Dialog::Dialog
-(EffectNoiseReduction *effect,
- EffectNoiseReduction::Settings *settings,
- wxWindow *parent, bool bHasProfile, bool bAllowTwiddleSettings)
-   : EffectDialog( parent, _("Noise Reduction"), EffectTypeProcess,wxDEFAULT_DIALOG_STYLE, eHelpButton )
-   , m_pEffect(effect)
-   , m_pSettings(settings) // point to
-   , mTempSettings(*settings)  // copy
-   , mbHasProfile(bHasProfile)
-   , mbAllowTwiddleSettings(bAllowTwiddleSettings)
-   // NULL out the control members until the controls are created.
-   , mKeepSignal(NULL)
-#ifdef ISOLATE_CHOICE
-   , mKeepNoise(NULL)
-#endif
-#ifdef RESIDUE_CHOICE
-   , mResidue(NULL)
-#endif
-{
-   EffectDialog::Init();
-
-   wxButton *const pButtonPreview =
-      (wxButton *)wxWindow::FindWindowById(ID_EFFECT_PREVIEW, this);
-   wxButton *const pButtonReduceNoise =
-      (wxButton *)wxWindow::FindWindowById(wxID_OK, this);
-
-   if (mbHasProfile || mbAllowTwiddleSettings) {
-      pButtonPreview->Enable(!mbAllowTwiddleSettings);
-      pButtonReduceNoise->SetFocus();
-   }
-   else {
-      pButtonPreview->Enable(false);
-      pButtonReduceNoise->Enable(false);
-   }
-}
-
-void EffectNoiseReduction::Dialog::DisableControlsIfIsolating()
-{
-   // If Isolate is chosen, disable controls that define
-   // "what to do with noise" rather than "what is noise."
-   // Else, enable them.
-   // This does NOT include sensitivity, NEW or old, nor
-   // the choice of window functions, size, or step.
-   // The method choice is not included, because it affects
-   // which sensitivity slider is operative, and that is part
-   // of what defines noise.
-
-   static const int toDisable[] = {
-      ID_GAIN_SLIDER,
-      ID_GAIN_TEXT,
-
-      ID_FREQ_SLIDER,
-      ID_FREQ_TEXT,
-
-#ifdef ATTACK_AND_RELEASE
-      ID_ATTACK_TIME_SLIDER,
-      ID_ATTACK_TIME_TEXT,
-
-      ID_RELEASE_TIME_SLIDER,
-      ID_RELEASE_TIME_TEXT,
-#endif
-   };
-   static const int nToDisable = sizeof(toDisable) / sizeof(toDisable[0]);
-   
-   bool bIsolating = 
-#ifdef ISOLATE_CHOICE
-      mKeepNoise->GetValue();
-#else
-      false;
-#endif
-   for (int ii = nToDisable; ii--;)
-      wxWindow::FindWindowById(toDisable[ii], this)->Enable(!bIsolating);
-}
-
-#ifdef ADVANCED_SETTINGS
-void EffectNoiseReduction::Dialog::EnableDisableSensitivityControls()
-{
-   wxChoice *const pChoice =
-      static_cast<wxChoice*>(wxWindow::FindWindowById(ID_CHOICE_METHOD, this));
-   const bool bOldMethod =
-      pChoice->GetSelection() == DM_OLD_METHOD;
-   wxWindow::FindWindowById(ID_OLD_SENSITIVITY_SLIDER, this)->Enable(bOldMethod);
-   wxWindow::FindWindowById(ID_OLD_SENSITIVITY_TEXT, this)->Enable(bOldMethod);
-   wxWindow::FindWindowById(ID_NEW_SENSITIVITY_SLIDER, this)->Enable(!bOldMethod);
-   wxWindow::FindWindowById(ID_NEW_SENSITIVITY_TEXT, this)->Enable(!bOldMethod);
-}
-#endif
-
-void EffectNoiseReduction::Dialog::OnGetProfile(wxCommandEvent & WXUNUSED(event))
-{
-   // Project has not be changed so skip pushing state
-   EffectManager::Get().SetSkipStateFlag(true);
-
-   if (!TransferDataFromWindow())
-      return;
-
-   // Return code distinguishes this first step from the actual effect
-   EndModal(1);
-}
-
-// This handles the whole radio group
-void EffectNoiseReduction::Dialog::OnNoiseReductionChoice( wxCommandEvent & WXUNUSED(event))
-{
-   if (mKeepSignal->GetValue())
-      mTempSettings.mNoiseReductionChoice = NRC_REDUCE_NOISE;
-#ifdef ISOLATE_CHOICE
-   else if (mKeepNoise->GetValue())
-      mTempSettings.mNoiseReductionChoice = NRC_ISOLATE_NOISE;
-#endif
-#ifdef RESIDUE_CHOICE
-   else
-      mTempSettings.mNoiseReductionChoice = NRC_LEAVE_RESIDUE;
-#endif
-   DisableControlsIfIsolating();
-}
-
-#ifdef ADVANCED_SETTINGS
-void EffectNoiseReduction::Dialog::OnMethodChoice(wxCommandEvent &)
-{
-   EnableDisableSensitivityControls();
-}
-#endif
-
-void EffectNoiseReduction::Dialog::OnPreview(wxCommandEvent & WXUNUSED(event))
-{
-   if (!TransferDataFromWindow())
-      return;
-
-   // Save & restore parameters around Preview, because we didn't do OK.
-   auto cleanup = valueRestorer( *m_pSettings );
-   *m_pSettings = mTempSettings;
-   m_pSettings->mDoProfile = false;
-
-   m_pEffect->Preview();
-}
-
-void EffectNoiseReduction::Dialog::OnReduceNoise( wxCommandEvent & WXUNUSED(event))
-{
-   if (!TransferDataFromWindow())
-      return;
-
-   EndModal(2);
-}
-
-void EffectNoiseReduction::Dialog::OnCancel(wxCommandEvent & WXUNUSED(event))
-{
-   EndModal(0);
-}
-
-void EffectNoiseReduction::Dialog::OnHelp(wxCommandEvent & WXUNUSED(event))
-{
-   HelpSystem::ShowHelp(this, "Noise_Reduction", true);
-}
-
-void EffectNoiseReduction::Dialog::PopulateOrExchange(ShuttleGui & S)
-{
-   S.StartStatic(_("Step 1"));
-   {
-      S.AddVariableText(_(
-         "Select a few seconds of just noise so Audacity knows what to filter out,\nthen click Get Noise Profile:"));
-      //m_pButton_GetProfile =
-      S.Id(ID_BUTTON_GETPROFILE).AddButton(_("&Get Noise Profile"));
-   }
-   S.EndStatic();
-
-   S.StartStatic(_("Step 2"));
-   {
-      S.AddVariableText(_(
-         "Select all of the audio you want filtered, choose how much noise you want\nfiltered out, and then click 'OK' to reduce noise.\n"));
-
-      S.StartMultiColumn(3, wxEXPAND);
-      S.SetStretchyCol(2);
-      {
-         for (int id = FIRST_SLIDER; id < END_OF_BASIC_SLIDERS; id += 2) {
-            const ControlInfo &info = controlInfo()[(id - FIRST_SLIDER) / 2];
-            info.CreateControls(id, S);
-         }
-      }
-      S.EndMultiColumn();
-
-      S.StartMultiColumn(
-         2
-#ifdef RESIDUE_CHOICE
-         +1
-#endif
-#ifdef ISOLATE_CHOICE
-         +1
-#endif
-         ,
-         wxALIGN_CENTER_HORIZONTAL);
-      {
-         S.AddPrompt(_("Noise:"));
-         mKeepSignal = S.Id(ID_RADIOBUTTON_KEEPSIGNAL)
-               .AddRadioButton(_("Re&duce")); /* i18n-hint: Translate differently from "Residue" ! */
-#ifdef ISOLATE_CHOICE
-         mKeepNoise = S.Id(ID_RADIOBUTTON_KEEPNOISE)
-               .AddRadioButtonToGroup(_("&Isolate"));
-#endif
-#ifdef RESIDUE_CHOICE
-         mResidue = S.Id(ID_RADIOBUTTON_RESIDUE)
-               .AddRadioButtonToGroup(_("Resid&ue")); /* i18n-hint: Means the difference between effect and original sound.  Translate differently from "Reduce" ! */
-#endif
-      }
-      S.EndMultiColumn();
-   }
-   S.EndStatic();
-
-
-#ifdef ADVANCED_SETTINGS
-   S.StartStatic(_("Advanced Settings"));
-   {
-      S.StartMultiColumn(2);
-      {
-         {
-            wxArrayString windowTypeChoices;
-            for (int ii = 0; ii < WT_N_WINDOW_TYPES; ++ii)
-               windowTypeChoices.Add(windowTypesInfo[ii].name);
-            S.TieChoice(_("&Window types") + wxString(wxT(":")),
-               mTempSettings.mWindowTypes,
-               &windowTypeChoices);
-         }
-
-         {
-            wxArrayString windowSizeChoices;
-            windowSizeChoices.Add(_("8"));
-            windowSizeChoices.Add(_("16"));
-            windowSizeChoices.Add(_("32"));
-            windowSizeChoices.Add(_("64"));
-            windowSizeChoices.Add(_("128"));
-            windowSizeChoices.Add(_("256"));
-            windowSizeChoices.Add(_("512"));
-            windowSizeChoices.Add(_("1024"));
-            windowSizeChoices.Add(_("2048 (default)"));
-            windowSizeChoices.Add(_("4096"));
-            windowSizeChoices.Add(_("8192"));
-            windowSizeChoices.Add(_("16384"));
-            S.TieChoice(_("Window si&ze") + wxString(wxT(":")),
-               mTempSettings.mWindowSizeChoice,
-               &windowSizeChoices);
-         }
-
-         {
-            wxArrayString stepsPerWindowChoices;
-            stepsPerWindowChoices.Add(_("2"));
-            stepsPerWindowChoices.Add(_("4 (default)"));
-            stepsPerWindowChoices.Add(_("8"));
-            stepsPerWindowChoices.Add(_("16"));
-            stepsPerWindowChoices.Add(_("32"));
-            stepsPerWindowChoices.Add(_("64"));
-            S.TieChoice(_("S&teps per window") + wxString(wxT(":")),
-               mTempSettings.mStepsPerWindowChoice,
-               &stepsPerWindowChoices);
-         }
-
-         S.Id(ID_CHOICE_METHOD);
-         {
-            wxArrayString methodChoices;
-            int nn = DM_N_METHODS;
-#ifndef OLD_METHOD_AVAILABLE
-            --nn;
-#endif
-            for (int ii = 0; ii < nn; ++ii)
-               methodChoices.Add(discriminationMethodInfo[ii].name);
-            S.TieChoice(_("Discrimination &method") + wxString(wxT(":")),
-               mTempSettings.mMethod,
-               &methodChoices);
-         }
-      }
-      S.EndMultiColumn();
-
-      S.StartMultiColumn(3, wxEXPAND);
-      S.SetStretchyCol(2);
-      {
-         for (int id = END_OF_BASIC_SLIDERS; id < END_OF_ADVANCED_SLIDERS; id += 2) {
-            const ControlInfo &info = controlInfo[(id - FIRST_SLIDER) / 2];
-            info.CreateControls(id, S);
-         }
-      }
-      S.EndMultiColumn();
-   }
-   S.EndStatic();
-#endif
-}
-
-bool EffectNoiseReduction::Dialog::TransferDataToWindow()
-{
-   // Do the choice controls:
-   if (!EffectDialog::TransferDataToWindow())
-      return false;
-
-   for (int id = FIRST_SLIDER; id < END_OF_SLIDERS; id += 2) {
-      wxSlider* slider =
-         static_cast<wxSlider*>(wxWindow::FindWindowById(id, this));
-      wxTextCtrl* text =
-         static_cast<wxTextCtrl*>(wxWindow::FindWindowById(id + 1, this));
-      const ControlInfo &info = controlInfo()[(id - FIRST_SLIDER) / 2];
-      const double field = mTempSettings.*(info.field);
-      text->SetValue(info.Text(field));
-      slider->SetValue(info.SliderSetting(field));
-   }
-
-   mKeepSignal->SetValue(mTempSettings.mNoiseReductionChoice == NRC_REDUCE_NOISE);
-#ifdef ISOLATE_CHOICE
-   mKeepNoise->SetValue(mTempSettings.mNoiseReductionChoice == NRC_ISOLATE_NOISE);
-#endif
-#ifdef RESIDUE_CHOICE
-   mResidue->SetValue(mTempSettings.mNoiseReductionChoice == NRC_LEAVE_RESIDUE);
-#endif
-
-   // Set the enabled states of controls
-   DisableControlsIfIsolating();
-#ifdef ADVANCED_SETTINGS
-   EnableDisableSensitivityControls();
-#endif
-
-   return true;
-}
-
-bool EffectNoiseReduction::Dialog::TransferDataFromWindow()
-{
-   if( !wxWindow::Validate() )
-      return false;
-   // Do the choice controls:
-   if (!EffectDialog::TransferDataFromWindow())
-      return false;
-
-   wxCommandEvent dummy;
-   OnNoiseReductionChoice(dummy);
-
-   return mTempSettings.Validate(m_pEffect);
-}
-
-void EffectNoiseReduction::Dialog::OnText(wxCommandEvent &event)
-{
-   int id = event.GetId();
-   int idx = (id - FIRST_SLIDER - 1) / 2;
-   const ControlInfo &info = controlInfo()[idx];
-   wxTextCtrl* text =
-      static_cast<wxTextCtrl*>(wxWindow::FindWindowById(id, this));
-   wxSlider* slider =
-      static_cast<wxSlider*>(wxWindow::FindWindowById(id - 1, this));
-   double &field = mTempSettings.*(info.field);
-
-   text->GetValue().ToDouble(&field);
-   slider->SetValue(info.SliderSetting(field));
-}
-
-void EffectNoiseReduction::Dialog::OnSlider(wxCommandEvent &event)
-{
-   int id = event.GetId();
-   int idx = (id - FIRST_SLIDER) / 2;
-   const ControlInfo &info = controlInfo()[idx];
-   wxSlider* slider =
-      static_cast<wxSlider*>(wxWindow::FindWindowById(id, this));
-   wxTextCtrl* text =
-      static_cast<wxTextCtrl*>(wxWindow::FindWindowById(id + 1, this));
-   double &field = mTempSettings.*(info.field);
-
-   field = info.Value(slider->GetValue());
-   text->SetValue(info.Text(field));
 }
 
